@@ -21,8 +21,8 @@ float roll  = 0.0F;
 float yaw   = 0.0F;
 
 unsigned long t_new, t_old, dt;
-unsigned long dt_target = 5000; // us
-unsigned long t_delay = 5000; // us
+unsigned long dt_target = 50000; // us
+unsigned long t_delay = dt_target; // us
 
 unsigned int count = 0;
 
@@ -31,7 +31,9 @@ unsigned int count = 0;
 void setup() {
     M5.begin();             // 本体初期化
     M5.Imu.Init();          // IMU初期化
-    Serial.begin(9600);     // シリアル通信初期化
+    M5.IMU.SetGyroFsr(M5.IMU.GFS_2000DPS);
+    M5.IMU.SetAccelFsr(M5.IMU.AFS_16G); 
+    Serial.begin(115200);     // シリアル通信初期化
 
     // 出力設定
     pinMode(10, OUTPUT);    //本体LED赤
@@ -46,8 +48,8 @@ void setup() {
     // MACアドレスの取得と表示
     uint8_t macBT[6];
     esp_read_mac(macBT, ESP_MAC_BT);  // MACアドレス取得
-    // M5.Lcd.printf("%02X:%02X:%02X:%02X:%02X:%02X\r\n", macBT[0], macBT[1], macBT[2], macBT[3], macBT[4], macBT[5]);
-    Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X\r\n", macBT[0], macBT[1], macBT[2], macBT[3], macBT[4], macBT[5]);
+    M5.Lcd.printf("%02X:%02X:%02X:%02X:%02X:%02X\r\n", macBT[0], macBT[1], macBT[2], macBT[3], macBT[4], macBT[5]);
+    // Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X\r\n", macBT[0], macBT[1], macBT[2], macBT[3], macBT[4], macBT[5]);
     
     // 電源ON時のシリアルデータが無くなるまで待つ
     while (Serial.available()) {data = Serial.read();}
@@ -75,13 +77,13 @@ void loop() {
     //                dt, t_delay, accX, accY, accZ, gyroX, gyroY, gyroZ, pitch, roll, yaw);
 
     SerialBT.printf("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\n", 
-                    dt, t_delay, accX, accY, accZ, gyroX, gyroY, gyroZ);
+                    count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ);
 
-    if (dt > 1.01*dt_target){
-        t_delay *= 0.99;
+    if (dt > 1.001*dt_target){
+        t_delay *= 0.999;
         }
-    else if (dt < 0.99*dt_target){
-        t_delay *= 1.01;
+    else if (dt < 0.999*dt_target){
+        t_delay *= 1.001;
     }
 
     // 再起動（リスタート）処理
@@ -91,7 +93,7 @@ void loop() {
     // 電源ボタン状態取得（1秒以下のONで「2」1秒以上で「1」すぐに「0」に戻る）
     btn_pw = M5.Axp.GetBtnPress();
 
-    if (count==500){
+    if (count==100){
         digitalWrite(10, LOW); //LED ON
         count = 0;
     }
