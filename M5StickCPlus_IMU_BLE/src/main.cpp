@@ -21,18 +21,21 @@ float roll  = 0.0F;
 float yaw   = 0.0F;
 
 unsigned long t_new, t_old, dt;
-unsigned long dt_target = 50000; // us
+unsigned long dt_target = 100000; // us
 unsigned long t_delay = dt_target; // us
 
 unsigned int count = 0;
 
+// String data_buf="";
 
 // 初期設定 -----------------------------------------------
 void setup() {
+
+
     M5.begin();             // 本体初期化
     M5.Imu.Init();          // IMU初期化
     M5.IMU.SetGyroFsr(M5.IMU.GFS_2000DPS);
-    M5.IMU.SetAccelFsr(M5.IMU.AFS_16G); 
+    M5.IMU.SetAccelFsr(M5.IMU.AFS_8G); 
     Serial.begin(115200);     // シリアル通信初期化
 
     // 出力設定
@@ -79,6 +82,8 @@ void loop() {
     SerialBT.printf("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\n", 
                     count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ);
 
+    //data_buf += ("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\t", count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ);
+
     if (dt > 1.001*dt_target){
         t_delay *= 0.999;
         }
@@ -93,8 +98,10 @@ void loop() {
     // 電源ボタン状態取得（1秒以下のONで「2」1秒以上で「1」すぐに「0」に戻る）
     btn_pw = M5.Axp.GetBtnPress();
 
-    if (count==100){
+    if (count==10){
         digitalWrite(10, LOW); //LED ON
+        //SerialBT.printf("%s\n", data_buf.c_str());
+        //data_buf = "";
         count = 0;
     }
     else {
