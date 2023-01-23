@@ -57,10 +57,10 @@ with serial.Serial('COM4', 9600, timeout=1) as ser:
             ax_gyro.set_ylim(-2500, 2500)
             ax_gyro.set_yticks(np.arange(-2500, 2501, 500))
 
-            ax_acc.set_ylim(-20, 20)
-            ax_acc.set_yticks(np.arange(-20, 20.1, 5))
+            ax_acc.set_ylim(-10, 10)
+            ax_acc.set_yticks(np.arange(-10, 10.1, 2))
             
-            if len(t_list) > 200:
+            if len(t_list) > 100:
                 del(t_list[0])
                 del(gyroX_list[0])
                 del(gyroY_list[0])
@@ -80,12 +80,12 @@ with serial.Serial('COM4', 9600, timeout=1) as ser:
             ax_acc.set_xlabel("Time (s)")
 
             
-            line_gyroX, = ax_gyro.plot(t_list, gyroX_list, label="gyroX", color="#1f77b4")
-            line_gyroY, = ax_gyro.plot(t_list, gyroY_list, label="gyroY", color="#ff7f0e")
-            line_gyroZ, = ax_gyro.plot(t_list, gyroZ_list, label="gyroZ", color="#2ca02c")
-            line_accX, = ax_acc.plot(t_list, accX_list, label="accX", color="#1f77b4")
-            line_accY, = ax_acc.plot(t_list, accY_list, label="accY", color="#ff7f0e")
-            line_accZ, = ax_acc.plot(t_list, accZ_list, label="accZ", color="#2ca02c")
+            line_gyroX, = ax_gyro.plot(t_list, gyroX_list, lw=1, label="gyroX", color="#1f77b4")
+            line_gyroY, = ax_gyro.plot(t_list, gyroY_list, lw=1, label="gyroY", color="#ff7f0e")
+            line_gyroZ, = ax_gyro.plot(t_list, gyroZ_list, lw=1, label="gyroZ", color="#2ca02c")
+            line_accX, = ax_acc.plot(t_list, accX_list, lw=1, label="accX", color="#1f77b4")
+            line_accY, = ax_acc.plot(t_list, accY_list, lw=1, label="accY", color="#ff7f0e")
+            line_accZ, = ax_acc.plot(t_list, accZ_list, lw=1, label="accZ", color="#2ca02c")
             
             ax_gyro.legend(loc=1)
             ax_acc.legend(loc=1)
