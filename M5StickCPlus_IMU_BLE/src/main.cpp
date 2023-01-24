@@ -3,8 +3,12 @@
 #include "BluetoothSerial.h"
 BluetoothSerial SerialBT;
 
+#include <CircularBuffer.h>
+
+CircularBuffer<float,512> accX_buf;
+
 // 変数宣言
-String name = "M5StickC_Plus"; // 接続名を設定
+String name = "M5StickC_Plus_2"; // 接続名を設定
 int btn_pw = 0;           // 電源ボタン状態取得用
 String data = "";         // 受信データ格納用
 
@@ -21,7 +25,7 @@ float roll  = 0.0F;
 float yaw   = 0.0F;
 
 unsigned long t_new, t_old, dt;
-unsigned long dt_target = 100000; // us
+unsigned long dt_target = 50000; // us
 unsigned long t_delay = dt_target; // us
 
 unsigned int count = 0;
@@ -80,7 +84,7 @@ void loop() {
     //                dt, t_delay, accX, accY, accZ, gyroX, gyroY, gyroZ, pitch, roll, yaw);
 
     SerialBT.printf("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\n", 
-                    count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ);
+                    count, millis(), accX, accY, accZ, gyroX, gyroY, gyroZ);
 
     //data_buf += ("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\t", count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ);
 
@@ -108,6 +112,9 @@ void loop() {
         digitalWrite(10, HIGH); //LED OFF
     }
     count += 1;
+
+    accX_buf.push(accX);
+    Serial.printf("%5.2f\t%5.2f\t%5.2f\t%5.2f\t%5.2f\n", accX_buf[0], accX_buf[1], accX_buf[2], accX_buf[3], accX_buf[4]);
 
 
     delayMicroseconds(t_delay);  // 遅延時間 us

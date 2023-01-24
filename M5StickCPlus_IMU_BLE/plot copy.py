@@ -25,13 +25,14 @@ ax_acc.grid(True)
 
 
 
-with serial.Serial('COM4', 9600, timeout=1) as ser:
+with serial.Serial('COM5', 9600, timeout=1) as ser:
     while True:
         try:
             line = ser.readline()   # read a '\n' terminated line
-            count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ = line.decode().split("\t")
+            count, elapsed_time, accX, accY, accZ, gyroX, gyroY, gyroZ = line.decode().split("\t")
             count = int(count)
-            dt = float(dt)
+            # dt = float(dt)
+            elapsed_time = float(elapsed_time)
             accX = float(accX)
             accY = float(accY)
             accZ = float(accZ)
@@ -41,7 +42,7 @@ with serial.Serial('COM4', 9600, timeout=1) as ser:
             
             # print(count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ)
             
-            elapsed_time += dt/1E6
+            elapsed_time = elapsed_time/1E3
             t_list.append(elapsed_time)
             gyroX_list.append(gyroX)
             gyroY_list.append(gyroY)
@@ -60,7 +61,7 @@ with serial.Serial('COM4', 9600, timeout=1) as ser:
             ax_acc.set_ylim(-10, 10)
             ax_acc.set_yticks(np.arange(-10, 10.1, 2))
             
-            if len(t_list) > 100:
+            if len(t_list) > 200:
                 del(t_list[0])
                 del(gyroX_list[0])
                 del(gyroY_list[0])
@@ -71,8 +72,8 @@ with serial.Serial('COM4', 9600, timeout=1) as ser:
                 ax_gyro.set_xlim(min(t_list), max(t_list))
                 ax_acc.set_xlim(min(t_list), max(t_list))
             else:
-                ax_gyro.set_xlim(0, 10)
-                ax_acc.set_xlim(0, 10)
+                ax_gyro.set_xlim(min(t_list), min(t_list)+10)
+                ax_acc.set_xlim(min(t_list), min(t_list)+10)
                 
             
             ax_gyro.set_ylabel("Gyro (deg/s)")
