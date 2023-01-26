@@ -28,11 +28,12 @@ float pitch = 0.0F;
 float roll  = 0.0F;
 float yaw   = 0.0F;
 
-unsigned long t_new, t_old, dt;
+unsigned long t_new, t_old, dt, t_now;
 unsigned long dt_target = 50000; // us
 unsigned long t_delay = dt_target; // us
 
-unsigned int count = 0;
+unsigned int measure_count = 0;
+unsigned int send_count = 0;
 unsigned int moveflag = 0;
 unsigned int is_started = 0;
 unsigned int is_finished = 0;
@@ -85,6 +86,7 @@ void measure_data(){
     is_finished = 0;
     is_finished_count = 0;
 
+
     t_buf.clear();
     accX_buf.clear();
     accY_buf.clear();
@@ -105,9 +107,10 @@ void measure_data(){
         // IMUデータ取得
         M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
         M5.IMU.getAccelData(&accX, &accY, &accZ);
-        
+        t_now = millis();
+
         // リングバッファへのデータの追加
-        t_buf.push(millis());
+        t_buf.push(t_now);
         accX_buf.push(accX);
         accY_buf.push(accY);
         accZ_buf.push(accZ);
@@ -121,21 +124,24 @@ void measure_data(){
         accZ_dif = abs(accZ - accZ_old);
 
         // 動いているか判定して
-        if ((accX_dif > 0.1)|(accY_dif > 0.1)|(accZ_dif > 0.1)){
-            moveflag = 1;
+        if ((accX_dif > 0.1)|(accY_dif > 0.1)|(accZ_dif > 0.1)){moveflag = 1;}
+        else {moveflag=0;}
+
+        if (moveflag==1){
             is_started_count += 1;
+            is_finished_count = 0;
         }
-        else {
-            moveflag = 0;
+        else{
             is_started_count = 0;
             if (is_started==1){is_finished_count += 1;}
         }
 
         if (is_started_count >= 10){is_started = 1;} //0.5s以上連続して動いているなら動き出したと判定
-        if (is_finished_count >= 60){is_finished = 1;} //3.0s以上連続して止まっているなら動きが停止したと判定
+        if (is_finished_count >= 20){is_finished = 1;} //1.0s以上連続して止まっているなら動きが停止したと判定
 
         moveflag_buf.push(moveflag);
-        Serial.printf("%d\t%d\t%d\t%d\t%d\t%5.2f\t%5.2f\t%5.2f\n",
+        Serial.printf("%d\t%d\t%d\t%d\t%d\t%d\t%5.2f\t%5.2f\t%5.2f\n",
+                        t_now,
                         moveflag,
                         is_started_count,
                         is_started,
@@ -159,6 +165,13 @@ void measure_data(){
 
         delayMicroseconds(t_delay);  // 遅延時間 us
 
+        measure_count += 1;
+        if (measure_count == 20){
+            digitalWrite(10, LOW); //LED ON
+            measure_count = 0;
+            }
+        else {digitalWrite(10, HIGH);} //LED OFF
+
         // finish measurement
         if (is_finished){break;}
     }
@@ -180,7 +193,15 @@ void ble_send_data(){
                         gyroX_buf.shift(),
                         gyroY_buf.shift(),
                         gyroZ_buf.shift());
-        delay(5);
+
+        send_count += 1;
+        if (send_count == 10){
+            digitalWrite(10, LOW); //LED ON
+            send_count = 0;
+            }
+        else {digitalWrite(10, HIGH);} //LED OFF
+        delay(10);
+
     }
     digitalWrite(10, HIGH); //LED OFF
     SerialBT.printf("end\n\n");
@@ -190,85 +211,4 @@ void ble_send_data(){
 void loop() {
     measure_data();
     ble_send_data();
-
-    /*
-    M5.update();  // 本体のボタン状態更新
-
-    M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
-    M5.IMU.getAccelData(&accX, &accY, &accZ);
-    // M5.IMU.getAhrsData(&pitch, &roll, &yaw);
-    
-    t_new = micros();
-    dt = t_new - t_old;
-    t_old = t_new;
-    
-    // SerialBT.printf("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\t%5.2f\t%5.2f\t%5.2f\n", 
-    //                dt, t_delay, accX, accY, accZ, gyroX, gyroY, gyroZ, pitch, roll, yaw);
-
-    // SerialBT.printf("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\n", 
-    //                count, millis(), accX, accY, accZ, gyroX, gyroY, gyroZ);
-
-    //data_buf += ("%d\t%d\t%5.2f\t%5.2f\t%5.2f\t%6.2f\t%6.2f\t%6.2f\t", count, dt, accX, accY, accZ, gyroX, gyroY, gyroZ);
-
-    if (dt > 1.001*dt_target){
-        t_delay *= 0.999;
-        }
-    else if (dt < 0.999*dt_target){
-        t_delay *= 1.001;
-    }
-
-    // 再起動（リスタート）処理
-    if (btn_pw == 2) {          // 電源ボタン短押し（1秒以下）なら
-        ESP.restart();
-    }
-    // 電源ボタン状態取得（1秒以下のONで「2」1秒以上で「1」すぐに「0」に戻る）
-    btn_pw = M5.Axp.GetBtnPress();
-
-    if (count==buf_size){
-        digitalWrite(10, LOW); //LED ON
-        //SerialBT.printf("%s\n", data_buf.c_str());
-        //data_buf = "";
-        count = 0;
-
-        // send data by BLE
-        ble_send_data();
-
-    }
-    else {
-        digitalWrite(10, HIGH); //LED OFF
-    }
-    count += 1;
-
-    t_buf.push(millis());
-    accX_buf.push(accX);
-    accY_buf.push(accY);
-    accZ_buf.push(accZ);
-    gyroX_buf.push(gyroX);
-    gyroY_buf.push(gyroY);
-    gyroZ_buf.push(gyroZ);
-
-    accX_dif = abs(accX - accX_old);
-    accY_dif = abs(accY - accY_old);
-    accZ_dif = abs(accZ - accZ_old);
-
-    if ((accX_dif > 0.1)|(accY_dif > 0.1)|(accZ_dif > 0.1)){
-        moveflag = 1;
-    }
-    else {
-        moveflag = 0;
-    }
-
-    moveflag_buf.push(moveflag);
-    Serial.printf("%d\t%5.2f\t%5.2f\t%5.2f\n", moveflag, accX_dif, accY_dif, accZ_dif);
-
-    accX_old = accX;
-    accY_old = accY;
-    accZ_old = accZ;
-
-
-
-
-
-    delayMicroseconds(t_delay);  // 遅延時間 us
-    */
 }

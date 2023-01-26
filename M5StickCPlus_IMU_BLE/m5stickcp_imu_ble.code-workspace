@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "M5StickCPlus_IMU_BLE",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.tpp": "cpp"
+		}
+	}
+}
