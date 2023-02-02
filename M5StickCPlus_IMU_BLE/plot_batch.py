@@ -31,6 +31,8 @@ plt.pause(0.01)
 is_receiving_ble = False
 
 ser = serial.Serial('COM5',9600,timeout=1)
+# clear receive buffer
+ser.reset_input_buffer()
 
 while True:
     try:
@@ -59,6 +61,7 @@ while True:
             line_accX.remove()
             line_accY.remove()
             line_accZ.remove()
+            
             line_gyroX, = ax_gyro.plot(t_list[i_start:i_max], gyroX_list[i_start:i_max], lw=1, label="gyroX", color="#1f77b4")
             line_gyroY, = ax_gyro.plot(t_list[i_start:i_max], gyroY_list[i_start:i_max], lw=1, label="gyroY", color="#ff7f0e")
             line_gyroZ, = ax_gyro.plot(t_list[i_start:i_max], gyroZ_list[i_start:i_max], lw=1, label="gyroZ", color="#2ca02c")

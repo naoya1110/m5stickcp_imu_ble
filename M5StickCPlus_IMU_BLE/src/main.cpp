@@ -6,7 +6,7 @@ BluetoothSerial SerialBT;
 #include <CircularBuffer.h>
 
 // 変数宣言
-String name = "M5StickC_Plus_2"; // 接続名を設定
+String name = "M5StickC_Plus_1"; // 接続名を設定
 int btn_pw = 0;           // 電源ボタン状態取得用
 String data = "";         // 受信データ格納用
 
@@ -53,7 +53,7 @@ void setup() {
     M5.begin();             // 本体初期化
     M5.Imu.Init();          // IMU初期化
     M5.IMU.SetGyroFsr(M5.IMU.GFS_2000DPS);
-    M5.IMU.SetAccelFsr(M5.IMU.AFS_4G); 
+    M5.IMU.SetAccelFsr(M5.IMU.AFS_8G); 
     Serial.begin(115200);     // シリアル通信初期化
 
     // 出力設定
